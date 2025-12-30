@@ -1,0 +1,21 @@
+{
+  "name": "Shaping Me",
+  "short_name": "ShapingMe",
+  "start_url": "shaping-me.html",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "orientation": "landscape",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "360x540",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "373x626",
+      "type": "image/png"
+    }
+  ]
+}
