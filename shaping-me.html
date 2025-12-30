@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Shaping Me</title>
+
+<style>
+:root{
+  --bg:#000;
+  --panel:#020617;
+  --line:#0f172a;
+  --cyan:#38bdf8;
+  --red:#ef4444;
+  --text:#e5e7eb;
+  --muted:#475569;
+}
+
+*{box-sizing:border-box;font-family:system-ui}
+
+body{
+  margin:0;
+  background:radial-gradient(circle at center,#020617 0%,#000 70%);
+  color:var(--text);
+  overflow:hidden;
+}
+
+.center{
+  width:100vw;
+  height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+/* ===== OPENING CEREMONY ===== */
+#ceremony{
+  text-align:center;
+  animation:fadeIn 2s;
+}
+.ribbon{
+  width:260px;
+  height:6px;
+  background:var(--red);
+  margin:20px auto;
+  position:relative;
+  overflow:hidden;
+}
+.ribbon.cut::before,
+.ribbon.cut::after{
+  content:"";
+  position:absolute;
+  width:50%;
+  height:100%;
+  background:var(--red);
+  animation:cut 1s forwards;
+}
+.ribbon.cut::after{
+  right:0;
+}
+@keyframes cut{
+  to{transform:translateX(-120%)}
+}
+.countdown{
+  font-size:32px;
+  letter-spacing:4px;
+  margin-top:10px;
+}
+.fade{opacity:.4}
+
+button{
+  margin-top:20px;
+  padding:12px 20px;
+  background:#000;
+  color:var(--cyan);
+  border:1px solid var(--cyan);
+  letter-spacing:3px;
+}
+
+/* ===== MAIN APP ===== */
+#app{display:none}
+
+/* ===== STATUS ===== */
+#statusScreen{
+  width:94vw;
+  height:86vh;
+  border:1px solid var(--line);
+  padding:18px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+}
+
+.title{font-size:20px;letter-spacing:5px}
+.sub{font-size:11px;color:var(--muted)}
+.warning{color:var(--red);font-size:12px;margin-top:6px}
+.ego{color:var(--cyan);font-size:12px;margin-top:6px}
+
+.stats{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin-top:12px;
+}
+.stat{border:1px solid var(--line);padding:8px}
+.stat-name{font-size:10px;color:var(--muted)}
+.stat-value{font-size:20px}
+
+button.full{width:100%}
+
+/* ===== CHECKLIST ===== */
+#checklistScreen{display:none;padding:10px}
+.list{
+  margin-top:10px;
+  height:82vh;
+  overflow:auto;
+  display:grid;
+  grid-template-columns:repeat(12,1fr);
+  gap:4px;
+}
+.day{
+  border:1px solid var(--line);
+  font-size:9px;
+  padding:4px;
+  text-align:center;
+  color:var(--muted);
+}
+.day.done{color:var(--cyan);border-color:var(--cyan)}
+.day.future{opacity:.2}
+.day.pulse{animation:pulse .3s}
+@keyframes pulse{
+  50%{box-shadow:0 0 8px var(--cyan)}
+}
+</style>
+</head>
+
+<body>
+<div class="center">
+
+<!-- OPENING CEREMONY -->
+<div id="ceremony">
+  <div class="fade">OPENING CEREMONY</div>
+  <div class="countdown" id="countdown">--:--:--</div>
+  <div class="ribbon" id="ribbon"></div>
+  <button id="beginBtn" style="display:none" onclick="begin()">BEGIN SHAPING ME</button>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+
+<div id="statusScreen">
+  <div>
+    <div class="title">STATUS WINDOW</div>
+    <div class="sub">SYSTEM OBSERVING</div>
+    <div id="warning" class="warning"></div>
+    <div id="egoMsg" class="ego"></div>
+
+    <div class="stats">
+      <div class="stat"><div class="stat-name">STR</div><div class="stat-value">10</div></div>
+      <div class="stat"><div class="stat-name">VIT</div><div class="stat-value">10</div></div>
+      <div class="stat"><div class="stat-name">AGI</div><div class="stat-value">10</div></div>
+      <div class="stat"><div class="stat-name">INT</div><div class="stat-value">10</div></div>
+      <div class="stat"><div class="stat-name">PER</div><div class="stat-value">10</div></div>
+      <div class="stat">
+        <div class="stat-name">DAYS LEFT</div>
+        <div class="stat-value" id="daysLeft"></div>
+      </div>
+    </div>
+  </div>
+
+  <button class="full" onclick="openChecklist()">ENTER CHECKLIST</button>
+</div>
+
+<div id="checklistScreen">
+  <button onclick="back()">BACK</button>
+  <div class="list" id="list"></div>
+</div>
+
+</div>
+</div>
+
+<script>
+/* ===== CEREMONY LOGIC ===== */
+const ceremonyDone = localStorage.getItem("ceremonyDone");
+const ceremonyEl = document.getElementById("ceremony");
+const app = document.getElementById("app");
+
+const target = new Date("2026-01-01T00:00:00");
+
+if(ceremonyDone){
+  ceremonyEl.style.display="none";
+  app.style.display="block";
+}else{
+  setInterval(()=>{
+    const now = new Date();
+    const diff = target - now;
+    if(diff<=0){
+      document.getElementById("countdown").innerText="00:00:00";
+      document.getElementById("ribbon").classList.add("cut");
+      document.getElementById("beginBtn").style.display="inline-block";
+    }else{
+      const h=Math.floor(diff/36e5);
+      const m=Math.floor(diff%36e5/6e4);
+      const s=Math.floor(diff%6e4/1000);
+      document.getElementById("countdown").innerText=
+        `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+    }
+  },1000);
+}
+
+function begin(){
+  localStorage.setItem("ceremonyDone","1");
+  ceremonyEl.style.display="none";
+  app.style.display="block";
+}
+
+/* ===== MAIN APP LOGIC ===== */
+const totalDays=1095;
+const startDate=new Date("2026-01-01");
+const today=new Date();
+const todayDay=Math.max(1,Math.floor((today-startDate)/86400000)+1);
+document.getElementById("daysLeft").innerText=`${Math.max(0,totalDays-todayDay+1)} / ${totalDays}`;
+
+const warning=document.getElementById("warning");
+if(localStorage.getItem("day_"+todayDay)!=="1") warning.innerText="TODAY NOT COMPLETED";
+
+const egoLines=[
+  "Discipline defeats talent.",
+  "The body obeys what the mind tolerates.",
+  "You trained. Others made excuses.",
+  "One day stronger. No one noticed. Good.",
+  "Repetition is mastery.",
+  "Comfort is the enemy."
+];
+
+function openChecklist(){
+  statusScreen.style.display="none";
+  checklistScreen.style.display="block";
+}
+function back(){
+  checklistScreen.style.display="none";
+  statusScreen.style.display="flex";
+}
+
+const list=document.getElementById("list");
+for(let i=1;i<=totalDays;i++){
+  const d=document.createElement("div");
+  const saved=localStorage.getItem("day_"+i)==="1";
+  const future=i>todayDay;
+  d.className="day"+(saved?" done":"")+(future?" future":"");
+  d.innerHTML=`DAY ${i}<br><input type="checkbox" ${saved?"checked":""} ${future?"disabled":""}>`;
+  d.querySelector("input").onchange=e=>{
+    if(e.target.checked){
+      localStorage.setItem("day_"+i,"1");
+      d.classList.add("done","pulse");
+      setTimeout(()=>d.classList.remove("pulse"),300);
+      if(i===todayDay){
+        warning.innerText="";
+        egoMsg.innerText=egoLines[Math.floor(Math.random()*egoLines.length)];
+      }
+    }else{
+      localStorage.removeItem("day_"+i);
+      d.classList.remove("done");
+    }
+  };
+  list.appendChild(d);
+}
+</script>
+</body>
+</html>
